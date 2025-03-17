@@ -18,7 +18,7 @@
     }
   ],
   "esmodules": [
-    "dnd5e.mjs"
+    "dnd5e-compiled.mjs"
   ],
   "styles": [
     "dnd5e.css"
