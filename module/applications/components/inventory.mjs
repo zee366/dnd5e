@@ -100,7 +100,9 @@ export default class InventoryElement extends HTMLElement {
    * @protected
    */
   _applyFilters(state) {
-    let items = this._app._filterItems?.(this._app.object.items, state.properties);
+    const collection = this.dataset.collection;
+    console.log("[InventoryElement] Applying Filters - Collection:", collection, "State:", state);
+    let items = this._app._filterItems?.(this._app.object.items, state.properties, collection);
     if ( !items ) return;
     const elementMap = {};
     this.querySelectorAll(".inventory-list .item-list .item").forEach(el => {
