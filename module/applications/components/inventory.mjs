@@ -11,7 +11,13 @@ export default class InventoryElement extends HTMLElement {
   connectedCallback() {
     this.#app = ui.windows[this.closest(".app")?.dataset.appid];
 
-    this._initializeFilterLists();
+    requestAnimationFrame(() => {
+      this._initializeFilterLists();
+      const state = this._app._filters?.[this.dataset.collection];
+      if (state) {
+        this._applyFilters(state);
+      }
+    });
 
     if ( !this.canUse ) {
       for ( const element of this.querySelectorAll('[data-action="use"]') ) {
@@ -101,7 +107,6 @@ export default class InventoryElement extends HTMLElement {
    */
   _applyFilters(state) {
     const collection = this.dataset.collection;
-    console.log("[InventoryElement] Applying Filters - Collection:", collection, "State:", state);
     let items = this._app._filterItems?.(this._app.object.items, state.properties, collection);
     if ( !items ) return;
     const elementMap = {};
