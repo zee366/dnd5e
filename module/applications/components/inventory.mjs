@@ -9,12 +9,14 @@ import ItemSheet5e2 from "../item/item-sheet-2.mjs";
  */
 export default class InventoryElement extends HTMLElement {
   connectedCallback() {
+    console.log("[InventoryElement] Connected - Collection:", this.dataset.collection);
     this.#app = ui.windows[this.closest(".app")?.dataset.appid];
 
     requestAnimationFrame(() => {
       this._initializeFilterLists();
       const state = this._app._filters?.[this.dataset.collection];
       if (state) {
+        console.log("[InventoryElement] Initial Filter State:", state);
         this._applyFilters(state);
       }
     });
@@ -75,25 +77,40 @@ export default class InventoryElement extends HTMLElement {
    */
   _initializeFilterLists() {
     const filterLists = this.querySelectorAll(".filter-list");
-    if ( !this._app._filters || !filterLists.length ) return;
+    console.log("[InventoryElement] Initializing Filters - Filter Lists Found:", filterLists.length);
+    if (!this._app._filters || !filterLists.length) return;
 
-    // Activate the set of filters which are currently applied
-    for ( const list of filterLists ) {
+    for (const list of filterLists) {
       const state = this._app._filters[list.dataset.filter];
-      if ( !state ) continue;
-      const set = state.properties;
-      const filters = list.querySelectorAll(".filter-item");
-      for ( const filter of filters ) {
-        if ( set.has(filter.dataset.filter) ) filter.classList.add("active");
-        filter.addEventListener("click", () => {
-          const f = filter.dataset.filter;
-          if ( set.has(f) ) set.delete(f);
-          else set.add(f);
-          filter.classList.toggle("active", set.has(f));
+      if (!state) continue;
+      console.log("[InventoryElement] Filter State for", list.dataset.filter, ":", state);
+    }
+
+    if (this.dataset.collection === "powerbook") {
+      const controls = this.querySelector("item-list-controls");
+      const filterKey = controls?.getAttribute("for") || this.dataset.collection;
+      const state = this._app._filters[filterKey];
+      if (!state) {
+        console.log("[InventoryElement] No Filter State Found for:", filterKey);
+        return;
+      }
+
+      const searches = this.querySelectorAll("search input");
+      console.log("[InventoryElement] Search Inputs Found:", searches.length);
+      for (const search of searches) {
+        search.value = state.name ?? "";
+        search.addEventListener("input", () => {
+          state.name = search.value;
+          console.log("[InventoryElement] Search Input - New State:", state);
+          this._applyFilters(state); // Direct apply to avoid focus loss
+        });
+        const clear = search.closest("search").querySelector("[data-action=clear]");
+        if (clear) clear.addEventListener("click", () => {
+          search.value = state.name = "";
+          console.log("[InventoryElement] Search Cleared - New State:", state);
           this._applyFilters(state);
         });
       }
-      this._applyFilters(state);
     }
   }
 
@@ -107,16 +124,24 @@ export default class InventoryElement extends HTMLElement {
    */
   _applyFilters(state) {
     const collection = this.dataset.collection;
+    console.log("[InventoryElement] Applying Filters - Collection:", collection, "State:", state);
     let items = this._app._filterItems?.(this._app.object.items, state.properties, collection);
-    if ( !items ) return;
+    console.log("[InventoryElement] Filtered Items:", items ? items.map(i => i.name) : "None");
+    if (!items) return;
     const elementMap = {};
     this.querySelectorAll(".inventory-list .item-list .item").forEach(el => {
       elementMap[el.dataset.itemId] = el;
       el.hidden = true;
+      console.log("[InventoryElement] Hiding Item ID:", el.dataset.itemId);
     });
-    for ( const item of items ) {
+    for (const item of items) {
       const el = elementMap[item.id];
-      if ( el ) el.hidden = false;
+      if (el) {
+        console.log("[InventoryElement] Unhiding Item:", item.name, "ID:", item.id);
+        el.hidden = false;
+      } else {
+        console.log("[InventoryElement] Item Not Found in DOM:", item.name, "ID:", item.id);
+      }
     }
   }
 
