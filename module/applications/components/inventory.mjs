@@ -85,33 +85,6 @@ export default class InventoryElement extends HTMLElement {
       if (!state) continue;
       console.log("[InventoryElement] Filter State for", list.dataset.filter, ":", state);
     }
-
-    if (this.dataset.collection === "powerbook") {
-      const controls = this.querySelector("item-list-controls");
-      const filterKey = controls?.getAttribute("for") || this.dataset.collection;
-      const state = this._app._filters[filterKey];
-      if (!state) {
-        console.log("[InventoryElement] No Filter State Found for:", filterKey);
-        return;
-      }
-
-      const searches = this.querySelectorAll("search input");
-      console.log("[InventoryElement] Search Inputs Found:", searches.length);
-      for (const search of searches) {
-        search.value = state.name ?? "";
-        search.addEventListener("input", () => {
-          state.name = search.value;
-          console.log("[InventoryElement] Search Input - New State:", state);
-          this._applyFilters(state); // Direct apply to avoid focus loss
-        });
-        const clear = search.closest("search").querySelector("[data-action=clear]");
-        if (clear) clear.addEventListener("click", () => {
-          search.value = state.name = "";
-          console.log("[InventoryElement] Search Cleared - New State:", state);
-          this._applyFilters(state);
-        });
-      }
-    }
   }
 
   /* -------------------------------------------- */
